@@ -3,14 +3,31 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image
 import numpy as np
+import os
+import requests
 
 app = Flask(__name__)
 
-# 載入你的模型
-model = load_model("fitness_cnn_model.keras")
+# Google Drive 模型下載資訊
+model_url = "https://drive.google.com/uc?export=download&id=1oIwiQ60jPQX0n75Tl_wCgsYyJU7_j_-M"
+model_path = "fitness_cnn_model.keras"
+
+# 如果模型不存在，就自動從 Google Drive 下載
+if not os.path.exists(model_path):
+    print("🔽 正在從 Google Drive 下載模型檔案...")
+    try:
+        response = requests.get(model_url)
+        with open(model_path, "wb") as f:
+            f.write(response.content)
+        print("✅ 模型下載完成！")
+    except Exception as e:
+        print(f"❌ 模型下載失敗：{e}")
+
+# 載入模型
+model = load_model(model_path)
 
 # 替換為你資料夾中的類別名稱（根據 flow_from_directory 自動產生的順序）
-class_names = ['伏地挺身', '仰臥起坐', '側棒式', '深蹲']  # ← 根據你的資料夾名稱排序可能不同，請照 val_generator.class_indices 排序
+class_names = ['伏地挺身', '仰臥起坐', '側棒式', '深蹲']
 
 IMG_SIZE = (128, 128)
 
