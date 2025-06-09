@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # 模型參數
 model_url = "https://drive.google.com/uc?export=download&id=1oIwiQ60jPQX0n75Tl_wCgsYyJU7_j_-M"
@@ -80,5 +80,5 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-if _name_ == '_main_':
+if _name_ == '__main__':
     app.run(debug=True)
