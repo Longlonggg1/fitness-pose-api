@@ -4,7 +4,7 @@ import io
 import numpy as np
 from PIL import Image
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS  # ✅ 加強 CORS
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 
@@ -15,7 +15,7 @@ except ImportError:
     gdown = None
 
 app = Flask(__name__)
-CORS(app)  # 啟用跨域
+CORS(app, resources={r"/*": {"origins": "*"}})  # ✅ 加強跨域支援
 
 # 模型設定
 model_url = "https://drive.google.com/uc?export=download&id=1oIwiQ60jPQX0n75Tl_wCgsYyJU7_j_-M"
@@ -26,10 +26,8 @@ if not os.path.exists(model_path):
     print("🔽 正在下載模型檔案...")
     try:
         if gdown:
-            # 用 gdown 下載
             gdown.download(model_url, model_path, quiet=False)
         else:
-            # 如果沒有 gdown，用 requests 備用下載
             import requests
             response = requests.get(model_url)
             response.raise_for_status()
@@ -51,12 +49,9 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # multipart/form-data 傳檔案
         if 'image' in request.files:
             file = request.files['image']
             image = Image.open(file).convert("RGB")
-
-        # application/json 傳 base64 字串
         elif request.is_json:
             data = request.get_json()
             if 'image' not in data:
@@ -66,16 +61,13 @@ def predict():
                 base64_str = base64_str.split(',')[-1]
             image_data = base64.b64decode(base64_str)
             image = Image.open(io.BytesIO(image_data)).convert("RGB")
-
         else:
             return jsonify({'error': '請提供圖片（檔案或 base64）'}), 400
 
-        # 圖片預處理
         image = image.resize(IMG_SIZE)
         arr = img_to_array(image) / 255.0
         arr = np.expand_dims(arr, axis=0)
 
-        # 預測
         preds = model.predict(arr)[0]
         class_index = int(np.argmax(preds))
         class_name = class_names[class_index]
