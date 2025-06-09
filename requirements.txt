@@ -1,6 +1,7 @@
-gunicorn
 flask
+flask-cors
 tensorflow
-pillow 
+pillow
 numpy
-gdown
+requests
+gunicorn
