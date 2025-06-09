@@ -1,13 +1,18 @@
 import os
 import base64
 import io
-import requests
 import numpy as np
 from PIL import Image
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
+
+# 新增 gdown
+try:
+    import gdown
+except ImportError:
+    gdown = None
 
 app = Flask(__name__)
 CORS(app)  # 啟用跨域
@@ -20,9 +25,16 @@ model_path = "fitness_cnn_model.keras"
 if not os.path.exists(model_path):
     print("🔽 正在下載模型檔案...")
     try:
-        response = requests.get(model_url)
-        with open(model_path, "wb") as f:
-            f.write(response.content)
+        if gdown:
+            # 用 gdown 下載
+            gdown.download(model_url, model_path, quiet=False)
+        else:
+            # 如果沒有 gdown，用 requests 備用下載
+            import requests
+            response = requests.get(model_url)
+            response.raise_for_status()
+            with open(model_path, "wb") as f:
+                f.write(response.content)
         print("✅ 模型下載完成！")
     except Exception as e:
         print(f"❌ 模型下載失敗：{e}")
@@ -78,5 +90,4 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Render 環境可不寫 host，或者寫 '0.0.0.0'
     app.run(host='0.0.0.0', port=5000, debug=True)
