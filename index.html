@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>健身動作識別系統</title>
+  <link rel="icon" href="/static/icon.png" />
+  <style>
+    body { 
+      font-family: "Segoe UI", sans-serif;
+      text-align: center;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    input[type="file"] {
+      margin-top: 10px;
+    }
+    img {
+      max-width: 300px;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #bbb;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #16a085;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏋️ 健身動作識別系統</h1>
+  <p>請上傳一張健身動作的圖片（例如：伏地挺身、深蹲）</p>
+
+  <input type="file" accept="image/*" id="imageInput" />
+  <br />
+  <img id="preview" src="" alt="預覽圖將顯示在這裡" />
+  <br />
+  <button onclick="predict()">🔍 開始預測</button>
+
+  <div class="result" id="result">尚未預測</div>
+
+  <script>
+    let base64Image = "";
+    const preview = document.getElementById("preview");
+    const resultDiv = document.getElementById("result");
+
+    document.getElementById("imageInput").addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function () {
+        base64Image = reader.result;
+        preview.src = base64Image;
+        resultDiv.innerText = "✅ 圖片載入成功，請點擊開始預測";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    async function predict() {
+      if (!base64Image) {
+        alert("請先選擇圖片！");
+        return;
+      }
+
+      resultDiv.innerText = "⏳ 預測中...";
+
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64Image }),
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          resultDiv.innerText = "❌ 錯誤：" + data.error;
+        } else {
+          resultDiv.innerText = `💪 預測結果：${data.class_name}（信心：${(data.confidence * 100).toFixed(2)}%）`;
+        }
+      } catch (err) {
+        resultDiv.innerText = "❌ 發送錯誤，請確認後端已啟動";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
