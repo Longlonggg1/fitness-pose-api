@@ -83,7 +83,7 @@
       resultDiv.innerText = "⏳ 預測中...";
 
       try {
-        const res = await fetch("/predict", {
+        const res = await fetch("https://fitness-pose-api.onrender.com/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: base64Image }),
